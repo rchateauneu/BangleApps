@@ -1,0 +1,17 @@
+{
+  "id": "vonkochclock",
+  "name": "Von Koch clock",
+  "version": "0.01",
+  "description": "Display an analog clock in a Von Koch curve.",
+  "icon": "vonkochclock.png",
+  "type": "clock",
+  "tags": "clock",
+  "supports": ["BANGLEJS"],
+  //"readme": "README.md",
+  //"custom": "custom.html",
+  //"allow_emulator": false,
+  "storage": [
+    {"name":"vonkochclock.app.js","url":"vonkochclock.js"},
+    {"name":"vonkochclock.img","url":"vonkochclock.icon.js","evaluate":true}
+  ]
+}
