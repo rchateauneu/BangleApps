@@ -94,129 +94,170 @@ function calcVonKoch(dp)
 poly = calcVonKoch(5);
 g.drawPoly(poly, false);
 
-///////////////////////////////
+let outerRadius = Math.min(CenterX,CenterY) * 0.9;
 
+Bangle.setUI('clock');
 
-  let outerRadius = Math.min(CenterX,CenterY) * 0.9;
+Bangle.loadWidgets();
 
-  Bangle.setUI('clock');
+let HourHandLength = outerRadius * 0.5;
+let HourHandWidth  = 2*3, halfHourHandWidth = HourHandWidth/2;
 
-  Bangle.loadWidgets();
+let MinuteHandLength = outerRadius * 0.7;
+let MinuteHandWidth  = 2*2, halfMinuteHandWidth = MinuteHandWidth/2;
 
-  let HourHandLength = outerRadius * 0.5;
-  let HourHandWidth  = 2*3, halfHourHandWidth = HourHandWidth/2;
+let twoPi  = 2*Math.PI;
+let Pi     = Math.PI;
+let halfPi = Math.PI/2;
+let invPi = 1.0 / Math.PI;
 
-  let MinuteHandLength = outerRadius * 0.7;
-  let MinuteHandWidth  = 2*2, halfMinuteHandWidth = MinuteHandWidth/2;
+let sin = Math.sin, cos = Math.cos;
 
-  let SecondHandLength = outerRadius * 0.9;
-  let SecondHandOffset = 6;
+let HourHandPolygon = [
+  -halfHourHandWidth,halfHourHandWidth,
+  -halfHourHandWidth,halfHourHandWidth-HourHandLength,
+   halfHourHandWidth,halfHourHandWidth-HourHandLength,
+   halfHourHandWidth,halfHourHandWidth,
+];
 
-  let twoPi  = 2*Math.PI;
-  let Pi     = Math.PI;
-  let halfPi = Math.PI/2;
-
-  let sin = Math.sin, cos = Math.cos;
-
-  let HourHandPolygon = [
-    -halfHourHandWidth,halfHourHandWidth,
-    -halfHourHandWidth,halfHourHandWidth-HourHandLength,
-     halfHourHandWidth,halfHourHandWidth-HourHandLength,
-     halfHourHandWidth,halfHourHandWidth,
-  ];
-
-  let MinuteHandPolygon = [
-    -halfMinuteHandWidth,halfMinuteHandWidth,
-    -halfMinuteHandWidth,halfMinuteHandWidth-MinuteHandLength,
-     halfMinuteHandWidth,halfMinuteHandWidth-MinuteHandLength,
-     halfMinuteHandWidth,halfMinuteHandWidth,
-  ];
+let MinuteHandPolygon = [
+  -halfMinuteHandWidth,halfMinuteHandWidth,
+  -halfMinuteHandWidth,halfMinuteHandWidth-MinuteHandLength,
+   halfMinuteHandWidth,halfMinuteHandWidth-MinuteHandLength,
+   halfMinuteHandWidth,halfMinuteHandWidth,
+];
 
 /**** drawClockFace ****/
 
-  function drawClockFace () {
-    g.setColor(g.theme.fg);
-    g.setFont('Vector', 22);
+function drawClockFace () {
+  g.setColor(g.theme.fg);
+  g.setFont('Vector', 22);
 
-    radiusFaces = 50;
-    faces = ["II", "XII", "X", "VIII", "VI", "IV"]
-    
-    angle = Math.PI/6.0;
-    for(var i = 0; i < 6; i++)
-    {
-      var text = faces[i];
-      angle = Math.PI/6.0 + i * Math.PI/3.0;
-      var x = CenterX + radiusFaces * Math.cos(angle) + text.length * 1;
-      var y = CenterY - radiusFaces * Math.sin(angle);
-      g.setFontAlign(0,0);
-      g.drawString(faces[i], x, y);
+  radiusFaces = 50;
+  faces = ["II", "XII", "X", "VIII", "VI", "IV"];
+
+  angle = Math.PI/6.0;
+  for(var i = 0; i < 6; i++)
+  {
+    var text = faces[i];
+    angle = Math.PI/6.0 + i * Math.PI/3.0;
+    var x = CenterX + radiusFaces * Math.cos(angle) + text.length * 1;
+    var y = CenterY - radiusFaces * Math.sin(angle);
+    g.setFontAlign(0,0);
+    g.drawString(faces[i], x, y);
+  }
+}
+
+let transformedPolygon = new Array(HourHandPolygon.length);
+
+function transformPolygon (originalPolygon, OriginX,OriginY, Phi) {
+  let sPhi = sin(Phi), cPhi = cos(Phi), x,y;
+
+  for (let i = 0, l = originalPolygon.length; i < l; i+=2) {
+    x = originalPolygon[i];
+    y = originalPolygon[i+1];
+
+    transformedPolygon[i]   = OriginX + x*cPhi + y*sPhi;
+    transformedPolygon[i+1] = OriginY + x*sPhi - y*cPhi;
+  }
+}
+
+/* This creates an array of seconds to an index in the polygon
+representing the Von Koch curve. */
+function calcPolyToSeconds(poly)
+{
+  // Seconds to poly
+  let secondsToPoint = Array(60).fill(-1);
+  for(let indexPoly = 0; indexPoly < poly.length; indexPoly += 2)
+  {
+    let vx = poly[indexPoly] - CenterX;
+    let vy = poly[indexPoly+1] - CenterY;
+    // Angle is between -pi and +pi.
+    let angle = Math.atan2(vx, vy);
+    // This is homogenous to a second between 0 and 60.
+    let index = 30 * (1 + angle * invPi);
+    index = Math.floor(index);
+    if(index == 60) {
+      index = 0;
+    }
+    // Clockwise.
+    index = 59 - index;
+    console.log("indexPoly:", indexPoly, " index=", index);
+    secondsToPoint[index] = indexPoly;
+  }
+  console.log("=====================================");
+  console.log("secondsToPoint=", secondsToPoint);
+  console.log("secondsToPoint.length=", secondsToPoint.length);
+  console.log("=====================================");
+  // Another pass if some indices do not have a destination point.
+  for(let indexJ = 0; indexJ < 60; ++indexJ)
+  {
+    console.log("Loop indexJ:", indexJ);
+    if(secondsToPoint[indexJ] == -1) {
+      if(indexJ == 0) {
+        secondsToPoint[indexJ] = secondsToPoint[indexJ + 1];
+      }
+      else {
+        secondsToPoint[indexJ] = secondsToPoint[indexJ - 1];
+      }
+      console.log("indexJ:", indexJ, " => ", secondsToPoint[indexJ]);
     }
   }
+  return secondsToPoint;
+}
 
-/**** transforme polygon ****/
+let polyVonKoch = calcVonKoch(5);
+let polyToSeconds = calcPolyToSeconds(polyVonKoch);
+console.log("polyVonKoch.length:", polyVonKoch.length);
 
-  let transformedPolygon = new Array(HourHandPolygon.length);
+function drawClockHands () {
+  let now = new Date();
 
-  function transformPolygon (originalPolygon, OriginX,OriginY, Phi) {
-    let sPhi = sin(Phi), cPhi = cos(Phi), x,y;
+  let Hours   = now.getHours() % 12;
+  let Minutes = now.getMinutes();
+  let Seconds = now.getSeconds();
 
-    for (let i = 0, l = originalPolygon.length; i < l; i+=2) {
-      x = originalPolygon[i];
-      y = originalPolygon[i+1];
+  let HoursAngle   = (Hours+(Minutes/60))/12 * twoPi - Pi;
+  let MinutesAngle = (Minutes/60)            * twoPi - Pi;
+  let SecondsAngle = (Seconds/60)            * twoPi - Pi;
 
-      transformedPolygon[i]   = OriginX + x*cPhi + y*sPhi;
-      transformedPolygon[i+1] = OriginY + x*sPhi - y*cPhi;
-    }
-  }
+  g.setColor(g.theme.fg);
 
-/**** draw clock hands ****/
+  transformPolygon(HourHandPolygon, CenterX,CenterY, HoursAngle);
+  g.fillPoly(transformedPolygon);
 
-  function drawClockHands () {
-    let now = new Date();
+  transformPolygon(MinuteHandPolygon, CenterX,CenterY, MinutesAngle);
+  g.fillPoly(transformedPolygon);
 
-    let Hours   = now.getHours() % 12;
-    let Minutes = now.getMinutes();
-    let Seconds = now.getSeconds();
+  //let sPhi = Math.sin(SecondsAngle), cPhi = Math.cos(SecondsAngle);
 
-    let HoursAngle   = (Hours+(Minutes/60))/12 * twoPi - Pi;
-    let MinutesAngle = (Minutes/60)            * twoPi - Pi;
-    let SecondsAngle = (Seconds/60)            * twoPi - Pi;
-
-    g.setColor(g.theme.fg);
-
-    transformPolygon(HourHandPolygon, CenterX,CenterY, HoursAngle);
-    g.fillPoly(transformedPolygon);
-
-    transformPolygon(MinuteHandPolygon, CenterX,CenterY, MinutesAngle);
-    g.fillPoly(transformedPolygon);
-
-    let sPhi = Math.sin(SecondsAngle), cPhi = Math.cos(SecondsAngle);
-
-    g.setColor(g.theme.fg2);
-    g.drawLine(
-      CenterX + SecondHandOffset*sPhi,
-      CenterY - SecondHandOffset*cPhi,
-      CenterX - SecondHandLength*sPhi,
-      CenterY + SecondHandLength*cPhi
-    );
-  }
+  let indexDestSeconds = polyToSeconds[Seconds];
+  console.log("Seconds:", Seconds, " indexDestSeconds:", indexDestSeconds);
+  let xDestSeconds = polyVonKoch[indexDestSeconds];
+  let yDestSeconds = polyVonKoch[indexDestSeconds + 1];
+  g.setColor(g.theme.fg2);
+  g.drawLine(
+    CenterX,
+    CenterY,
+    xDestSeconds,
+    yDestSeconds
+  );
+}
 
 /**** refreshDisplay ****/
 
-  poly = calcVonKoch(5);
+let Timer;
+function refreshDisplay () {
+  g.clear(true); // also loads current theme
 
-  let Timer;
-  function refreshDisplay () {
-    g.clear(true);                                   // also loads current theme
+  // drawVonKoch(5);
+  g.drawPoly(polyVonKoch, false);
+  //console.log("Len poly:", poly.length);
+  drawClockFace();
+  drawClockHands();
 
-    // drawVonKoch(5);
-    g.drawPoly(poly, false);
-    console.log("Len poly:", poly.length);
-    drawClockFace();
-    drawClockHands();
+  let Pause = 1000 - (Date.now() % 1000);
+  Timer = setTimeout(refreshDisplay,Pause);
+}
 
-    let Pause = 1000 - (Date.now() % 1000);
-    Timer = setTimeout(refreshDisplay,Pause);
-  }
-
-  setTimeout(refreshDisplay, 500);                 // enqueue first draw request
+setTimeout(refreshDisplay, 500);                 // enqueue first draw request
