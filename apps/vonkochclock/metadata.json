@@ -7,9 +7,6 @@
   "type": "clock",
   "tags": "clock",
   "supports": ["BANGLEJS"],
-  //"readme": "README.md",
-  //"custom": "custom.html",
-  //"allow_emulator": false,
   "storage": [
     {"name":"vonkochclock.app.js","url":"vonkochclock.js"},
     {"name":"vonkochclock.img","url":"vonkochclock.icon.js","evaluate":true}

@@ -3,13 +3,9 @@
   "name": "Conway game of life clock",
   "version": "0.01",
   "description": "A digital clock on a Conway game of life.",
-  //"icon": "solar_clock.png",
   "type": "clock",
   "tags": "clock",
   "supports": ["BANGLEJS"],
-  //"readme": "README.md",
-  //"custom": "custom.html",
-  //"allow_emulator": false,
   "storage": [
     {"name":"conwayclock.app.js","url":"conwayclock.js"},
     {"name":"conwayclock.img","url":"conwayclock.icon.js","evaluate":true}
