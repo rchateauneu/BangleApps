@@ -21,55 +21,20 @@ var bufferH = h;
 var bufferSize = bufferW * bufferH;
 
 var imgbpp = 8;
-var imgscale = 2;
+var imgscale = 4;
 var imageW = bufferW/imgscale;
 var imageH = bufferH/imgscale;
 var imageSize = imageW * imageH;
 
 console.log("Init w=", w, "h=", h, "imageSize=", imageSize);
 
-var bufferImage = new Uint8Array(bufferSize);
-bufferImage.fill(0, 0, bufferSize);
-
-// For imgscale = 2, imgSize=7744 : Not fast enough.
-function ConwayBufferFirst(imgW, imgH, bufferInput, bufferOutput)
-{
-  let maxOffset = imgW * imgH;
-
-  var offsets = [-imgH - 1, -imgH, -imgH + 1, -1, 1, imgH -1, imgH, imgH + 1];
-	for(let bufferOffset = 0; bufferOffset < maxOffset; bufferOffset++)
-	{
-    let count = 0;
-    for(let offset of offsets) {
-      let fullOffset = bufferOffset + offset;
-      if(fullOffset < 0) continue;
-      if(fullOffset >= maxOffset) break;
-      if(bufferInput[fullOffset] == 0) {
-        count++;
-        if(count > 3) break;
-      }
-    }
-    let currentColor = bufferInput[bufferOffset];
-    if(currentColor == 0) {
-      if((count < 2) || (count > 3)) {
-        currentColor = -1;
-      }
-    }
-    else {
-      if(count == 3) {
-        currentColor = 0;
-      }
-    }
-    bufferOutput[bufferOffset] = currentColor;
-	}
-}
-
 // For imgscale = 2, imgSize=7744 : Fast enough !!
-function ConwayBufferSecond(imgW, imgH, bufferInput, bufferOutput)
+function ConwayBuffer(imgW, imgH, bufferInput, bufferOutput)
 {
   let maxOffset = imgW * imgH;
 
   // New buffers are initialised to zero. No need to reset. This is not documented.
+  // Consider XXX.fill(0);
 	//for(let bufferOffset = 0; bufferOffset < maxOffset; bufferOffset++) {
   //  bufferOutput[bufferOffset] = 0;
   //}
@@ -77,7 +42,6 @@ function ConwayBufferSecond(imgW, imgH, bufferInput, bufferOutput)
   var offsets = [-imgH - 1, -imgH, -imgH + 1, -1, 1, imgH -1, imgH, imgH + 1];
 	for(let bufferOffset = 0; bufferOffset < maxOffset; bufferOffset++)
 	{
-    //if(bufferInput[bufferOffset] == 0) {
     if(! bufferInput[bufferOffset]) {
       // This is rarely done because most pixels are not set.
       for(let offset of offsets) {
@@ -109,44 +73,173 @@ function ConwayBufferSecond(imgW, imgH, bufferInput, bufferOutput)
 var currentBuffer = Graphics.createArrayBuffer(imageW,imageH,imgbpp);
 
 function DisplayCurrentBuffer() {
-  let img = {width:imageW, height:imageH, buffer:currentBuffer.buffer, bpp:imgbpp};
-  g.drawImage(img,0,0,{scale:imgscale});
+  g.drawImage({
+    width:imageW, height:imageH, bpp: imgbpp,
+    buffer : currentBuffer.buffer,
+  },0,0,{scale:imgscale});
 }
 
-function InitConway(inputBuffer)
-{
-  //inputBuffer.drawLine(0,0,10,10);
-  //inputBuffer.drawCircle(10,10,10);
-  inputBuffer.drawString("Conway", 30, 20);
-  //inputBuffer.drawRect(0, 0, 20, 20);
-  console.log("InitConway inputBuffer=", inputBuffer);
-  DisplayCurrentBuffer();
+console.log("InitConway inputBuffer=", inputBuffer);
+DisplayCurrentBuffer();
+
+//////////////////////////////////////////////////////////////////////
+const ONE = [
+  [0, 1, 0],
+  [1, 1, 0],
+  [0, 1, 0],
+  [0, 1, 0],
+  [0, 1, 0],
+  [0, 1, 0],
+  [1, 1, 1],
+];
+const TWO = [
+  [0, 1, 0],
+  [1, 0, 1],
+  [0, 0, 1],
+  [0, 1, 0],
+  [1, 0, 0],
+  [1, 0, 0],
+  [1, 1, 1],
+];
+const THREE = [
+  [0, 1, 0],
+  [1, 0, 1],
+  [0, 0, 1],
+  [0, 1, 0],
+  [0, 0, 1],
+  [1, 0, 1],
+  [0, 1, 0],
+];
+const FOUR = [
+  [0, 0, 1],
+  [1, 0, 1],
+  [1, 0, 1],
+  [1, 1, 1],
+  [0, 0, 1],
+  [0, 0, 1],
+  [0, 0, 1],
+];
+const FIVE = [
+  [1, 1, 1],
+  [1, 0, 0],
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+  [1, 0, 1],
+  [0, 1, 0],
+];
+const SIX = [
+  [0, 1, 0],
+  [1, 0, 1],
+  [1, 0, 0],
+  [1, 1, 0],
+  [1, 0, 1],
+  [1, 0, 1],
+  [0, 1, 0],
+];
+const SEVEN = [
+  [1, 1, 1],
+  [1, 0, 1],
+  [0, 0, 1],
+  [0, 1, 0],
+  [0, 1, 0],
+  [0, 1, 0],
+  [0, 1, 0],
+];
+const EIGHT = [
+  [0, 1, 0],
+  [1, 0, 1],
+  [1, 0, 1],
+  [0, 1, 0],
+  [1, 0, 1],
+  [1, 0, 1],
+  [0, 1, 0],
+];
+const NINE = [
+  [0, 1, 0],
+  [1, 0, 1],
+  [1, 0, 1],
+  [0, 1, 1],
+  [0, 0, 1],
+  [1, 0, 1],
+  [0, 1, 0],
+];
+const ZERO = [
+  [0, 1, 0],
+  [1, 0, 1],
+  [1, 0, 1],
+  [1, 0, 1],
+  [1, 0, 1],
+  [1, 0, 1],
+  [0, 1, 0],
+];
+const NUMBERS = [ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE];
+
+const setPixelSub = (i, j) => {
+  currentBuffer.buffer[i * imageW + j] = 0;
 }
 
-InitConway(currentBuffer);
 
-function Cycle()
+const setPixel = (i, j) => {
+  setPixelSub(2*i, 2*j);
+  setPixelSub(2*i, 2*j + 1);
+  setPixelSub(2*i + 1, 2*j);
+  setPixelSub(2*i + 1, 2*j + 1);
+};
+
+const setNum = (character, i, j) => {
+  const startJ = j;
+  character.forEach(row => {
+    j = startJ;
+    row.forEach(pixel => {
+      if (pixel) setPixel(i, j);
+      j++;
+    });
+    i++;
+  });
+};
+
+const setDots = () => {
+  setPixel(10, 10);
+  setPixel(12, 10);
+};
+
+function DrawTime()
 {
-  let outputBuffer = Graphics.createArrayBuffer(imageW,imageH,imgbpp);
-  //ConwayBufferFirst(imageW, imageH, currentBuffer.buffer, outputBuffer.buffer);
-  ConwayBufferSecond(imageW, imageH, currentBuffer.buffer, outputBuffer.buffer);
-
-  currentBuffer = outputBuffer;
-
+  currentBuffer.setColor(0);
+  /*
   var date = new Date(); // Actually the current date, this one is shown
   var timeStr = require("locale").time(date, 1); // Hour and minute
   currentBuffer.setColor(0);
   currentBuffer.setFontAlign(0, 0).setFont("12x20").drawString(timeStr, 45, 20); // draw time
+  */
+  const d = new Date();
+  const hourTens = Math.floor(d.getHours() / 10);
+  const hourOnes = d.getHours() % 10;
+  const minuteTens = Math.floor(d.getMinutes() / 10);
+  const minuteOnes = d.getMinutes() % 10;
+  setNum(NUMBERS[hourTens], 8, 1);
+  setNum(NUMBERS[hourOnes], 8, 6);
+  setDots();
+  setNum(NUMBERS[minuteTens], 8, 13);
+  setNum(NUMBERS[minuteOnes], 8, 18);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+
+function Cycle()
+{
+  let outputBuffer = Graphics.createArrayBuffer(imageW,imageH,imgbpp);
+  ConwayBuffer(imageW, imageH, currentBuffer.buffer, outputBuffer.buffer);
+
+  currentBuffer = outputBuffer;
+  DrawTime();
 
   DisplayCurrentBuffer();
 }
 
-var loopCount = 10;
-
-/*
-Fonts: [  "4x6",  "6x8",  "12x20",  "6x15",  "Vector" ]
-console.log("Fonts:", g.getFonts());
-*/
+var loopCount = 100;
 
 function Looper()
 {
