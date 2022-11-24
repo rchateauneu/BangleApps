@@ -4,6 +4,8 @@
   "shortName": "Conway game of life clock",
   "version": "0.01",
   "description": "A digital clock on a Conway game of life.",
+  "icon": "conwayclock.png",
+  "screenshots": [{"url":"conwayclock.screenshot.png"}],
   "type": "clock",
   "tags": "clock",
   "supports": ["BANGLEJS2"],

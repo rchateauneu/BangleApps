@@ -4,6 +4,7 @@
   "version": "0.01",
   "description": "Display an analog clock in a Von Koch curve.",
   "icon": "vonkochclock.png",
+  "screenshots": [{"url":"vonkochclock.screenshot.png"}],
   "type": "clock",
   "tags": "clock",
   "supports": ["BANGLEJS2"],
