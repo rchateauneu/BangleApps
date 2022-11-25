@@ -20,7 +20,14 @@ var bufferW = w;
 var bufferH = h;
 var bufferSize = bufferW * bufferH;
 
+// Web Safe 216 color palette
+// https://en.wikipedia.org/wiki/Web_colors#Web-safe_colors
+// r,g,b = (0..5, 0..5, 0..5)
+var COLOR_RED = 5 *36;
+var COLOR_GREEN = 5*16;
+var COLOR_BLUE = 5;
 var imgbpp = 8;
+// var imgbpp = 24;
 var imgscale = 4;
 var imageW = bufferW/imgscale;
 var imageH = bufferH/imgscale;
@@ -56,31 +63,24 @@ function ConwayBuffer(imgW, imgH, bufferInput, bufferOutput)
 	for(let bufferOffset = 0; bufferOffset < maxOffset; bufferOffset++) {
     let currentColor = bufferInput[bufferOffset];
     let count = bufferOutput[bufferOffset];
+    if(currentColor == COLOR_RED) currentColor = 0;
     if(currentColor) {
       if(count == 3) {
-        currentColor = 0;
+        currentColor = 0; // Black
       }
     }
     else {
+      // 
+      // 128 Grey
+      // 100 Green
+      // 200 red
       if((count < 2) || (count > 3)) {
-        currentColor = -1;
+        currentColor = -1; // White
       }
     }
     bufferOutput[bufferOffset] = currentColor;
   }
 }
-
-var currentBuffer = Graphics.createArrayBuffer(imageW,imageH,imgbpp);
-
-function DisplayCurrentBuffer() {
-  g.drawImage({
-    width:imageW, height:imageH, bpp: imgbpp,
-    buffer : currentBuffer.buffer,
-  },0,0,{scale:imgscale});
-}
-
-console.log("InitConway inputBuffer=", inputBuffer);
-DisplayCurrentBuffer();
 
 //////////////////////////////////////////////////////////////////////
 const ONE = [
@@ -175,60 +175,69 @@ const ZERO = [
 ];
 const NUMBERS = [ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE];
 
-const setPixelSub = (i, j) => {
-  currentBuffer.buffer[i * imageW + j] = 0;
-}
+var currentBuffer = Graphics.createArrayBuffer(imageW,imageH,imgbpp);
 
-
-const setPixel = (i, j) => {
-  setPixelSub(2*i, 2*j);
-  setPixelSub(2*i, 2*j + 1);
-  setPixelSub(2*i + 1, 2*j);
-  setPixelSub(2*i + 1, 2*j + 1);
+const setPixelSub = (i, j, color) => {
+  currentBuffer.buffer[i * imageW + j] = color;
 };
 
-const setNum = (character, i, j) => {
+const setPixel = (i, j, color) => {
+  setPixelSub(2*i, 2*j, color);
+  setPixelSub(2*i, 2*j + 1, color);
+  setPixelSub(2*i + 1, 2*j, color);
+  setPixelSub(2*i + 1, 2*j + 1, color);
+};
+
+const setNum = (character, i, j, color) => {
   const startJ = j;
   character.forEach(row => {
     j = startJ;
     row.forEach(pixel => {
-      if (pixel) setPixel(i, j);
+      if (pixel) setPixel(i, j, color);
       j++;
     });
     i++;
   });
 };
 
-const setDots = () => {
-  setPixel(10, 10);
-  setPixel(12, 10);
+const setDots = (color) => {
+  setPixel(10, 10, color);
+  setPixel(12, 10, color);
 };
 
-function DrawTime()
+function WriteTime(hourTens, hourOnes, minuteTens, minuteOnes, color)
 {
-  currentBuffer.setColor(0);
-  /*
-  var date = new Date(); // Actually the current date, this one is shown
-  var timeStr = require("locale").time(date, 1); // Hour and minute
-  currentBuffer.setColor(0);
-  currentBuffer.setFontAlign(0, 0).setFont("12x20").drawString(timeStr, 45, 20); // draw time
-  */
+    setNum(NUMBERS[hourTens], 8, 1, color);
+    setNum(NUMBERS[hourOnes], 8, 6, color);
+    setDots(color);
+    setNum(NUMBERS[minuteTens], 8, 13, color);
+    setNum(NUMBERS[minuteOnes], 8, 18, color);
+}
+
+function DrawTime(black)
+{
   const d = new Date();
   const hourTens = Math.floor(d.getHours() / 10);
   const hourOnes = d.getHours() % 10;
   const minuteTens = Math.floor(d.getMinutes() / 10);
   const minuteOnes = d.getMinutes() % 10;
-  setNum(NUMBERS[hourTens], 8, 1);
-  setNum(NUMBERS[hourOnes], 8, 6);
-  setDots();
-  setNum(NUMBERS[minuteTens], 8, 13);
-  setNum(NUMBERS[minuteOnes], 8, 18);
+  const seconds = d.getSeconds();
+  WriteTime(hourTens, hourOnes, minuteTens, minuteOnes, 0);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 
-function Cycle()
+function DrawCurrentBuffer() {
+  g.drawImage({
+    width:imageW, height:imageH, bpp: imgbpp,
+    buffer : currentBuffer.buffer,
+  },0,0,{scale:imgscale});
+}
+
+DrawCurrentBuffer();
+
+function CreateImage()
 {
   let outputBuffer = Graphics.createArrayBuffer(imageW,imageH,imgbpp);
   ConwayBuffer(imageW, imageH, currentBuffer.buffer, outputBuffer.buffer);
@@ -236,20 +245,20 @@ function Cycle()
   currentBuffer = outputBuffer;
   DrawTime();
 
-  DisplayCurrentBuffer();
+  DrawCurrentBuffer();
 }
 
-var loopCount = 100;
+var loopCount = 10;
 
-function Looper()
+function MainLoop()
 {
   console.log("loopCount=", loopCount);
   if(loopCount > 0) {
     loopCount--;
-  	setTimeout(Looper, 1000);
-    Cycle();
+  	setTimeout(MainLoop, 1000);
+    CreateImage();
   }
 }
 
 console.log("Init buffer done");
-Looper();
+MainLoop();
