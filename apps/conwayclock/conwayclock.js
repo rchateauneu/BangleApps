@@ -26,6 +26,8 @@ var bufferSize = bufferW * bufferH;
 var COLOR_RED = 5 *36;
 var COLOR_GREEN = 5*16;
 var COLOR_BLUE = 5;
+var COLOR_WHITE = 255; // If 8 bits
+var COLOR_BLACK = 0;
 var imgbpp = 8;
 // var imgbpp = 24;
 var imgscale = 4;
@@ -49,7 +51,7 @@ function ConwayBuffer(imgW, imgH, bufferInput, bufferOutput)
   var offsets = [-imgH - 1, -imgH, -imgH + 1, -1, 1, imgH -1, imgH, imgH + 1];
 	for(let bufferOffset = 0; bufferOffset < maxOffset; bufferOffset++)
 	{
-    if(! bufferInput[bufferOffset]) {
+    if(COLOR_WHITE != bufferInput[bufferOffset]) {
       // This is rarely done because most pixels are not set.
       for(let offset of offsets) {
         let fullOffset = bufferOffset + offset;
@@ -66,7 +68,7 @@ function ConwayBuffer(imgW, imgH, bufferInput, bufferOutput)
     if(currentColor == COLOR_RED) currentColor = 0;
     if(currentColor) {
       if(count == 3) {
-        currentColor = 0; // Black
+        currentColor = COLOR_BLACK;
       }
     }
     else {
@@ -75,7 +77,7 @@ function ConwayBuffer(imgW, imgH, bufferInput, bufferOutput)
       // 100 Green
       // 200 red
       if((count < 2) || (count > 3)) {
-        currentColor = -1; // White
+        currentColor = COLOR_WHITE;
       }
     }
     bufferOutput[bufferOffset] = currentColor;
@@ -222,7 +224,7 @@ function DrawTime(black)
   const minuteTens = Math.floor(d.getMinutes() / 10);
   const minuteOnes = d.getMinutes() % 10;
   const seconds = d.getSeconds();
-  WriteTime(hourTens, hourOnes, minuteTens, minuteOnes, 0);
+  WriteTime(hourTens, hourOnes, minuteTens, minuteOnes, COLOR_RED);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -248,7 +250,7 @@ function CreateImage()
   DrawCurrentBuffer();
 }
 
-var loopCount = 10;
+var loopCount = 100;
 
 function MainLoop()
 {
@@ -259,6 +261,16 @@ function MainLoop()
     CreateImage();
   }
 }
+
+function printit() {
+  console.log("PRINTIT");
+}
+
+//Bangle.setUI({btn:printit});
+
+// ??
+Bangle.setUI("clock");
+// Bangle.loadWidgets();
 
 console.log("Init buffer done");
 MainLoop();
