@@ -107,7 +107,6 @@ let MinuteHandWidth  = 2*2, halfMinuteHandWidth = MinuteHandWidth/2;
 let twoPi  = 2*Math.PI;
 let Pi     = Math.PI;
 let halfPi = Math.PI/2;
-let invPi = 1.0 / Math.PI;
 
 let sin = Math.sin, cos = Math.cos;
 
@@ -164,33 +163,30 @@ function transformPolygon (originalPolygon, OriginX,OriginY, Phi) {
 representing the Von Koch curve. */
 function calcPolyToSeconds(poly)
 {
+  console.log("calcPolyToSeconds poly.length:", poly.length);
   // Seconds to poly
   let secondsToPoint = Array(60).fill(-1);
+  let thirtyDivPi = 30.0 / Math.PI;
   for(let indexPoly = 0; indexPoly < poly.length; indexPoly += 2)
   {
     let vx = poly[indexPoly] - CenterX;
     let vy = poly[indexPoly+1] - CenterY;
     // Angle is between -pi and +pi.
     let angle = Math.atan2(vx, vy);
-    // This is homogenous to a second between 0 and 60.
-    let index = 30 * (1 + angle * invPi);
-    index = Math.floor(index);
+    let index = angle * thirtyDivPi;
+    // Clockwise.
+    index = 29 - Math.floor(index);
     if(index == 60) {
       index = 0;
     }
-    // Clockwise.
-    index = 59 - index;
-    console.log("indexPoly:", indexPoly, " index=", index);
+    // index is homogenous to a second between 0 and 60.
     secondsToPoint[index] = indexPoly;
   }
-  console.log("=====================================");
   console.log("secondsToPoint=", secondsToPoint);
   console.log("secondsToPoint.length=", secondsToPoint.length);
-  console.log("=====================================");
   // Another pass if some indices do not have a destination point.
   for(let indexJ = 0; indexJ < 60; ++indexJ)
   {
-    console.log("Loop indexJ:", indexJ);
     if(secondsToPoint[indexJ] == -1) {
       if(indexJ == 0) {
         secondsToPoint[indexJ] = secondsToPoint[indexJ + 1];
@@ -198,9 +194,9 @@ function calcPolyToSeconds(poly)
       else {
         secondsToPoint[indexJ] = secondsToPoint[indexJ - 1];
       }
-      console.log("indexJ:", indexJ, " => ", secondsToPoint[indexJ]);
     }
   }
+  console.log("calcPolyToSeconds secondsToPoint.length:", secondsToPoint.length);
   return secondsToPoint;
 }
 
@@ -240,11 +236,31 @@ function drawClockHands () {
   );
 }
 
+function FillPolygon(poly)
+{
+  /*
+  This algorithm does not work because it does not fill the proper side of each sub-polygonn.
+  Maybe filling the triangles recursively, but before drawing the hands.
+  */
+  let start = 0;
+  let end = 128;
+  while(true) {
+    g.fillPoly(polyVonKoch.slice(start,end));
+    if(end >= poly.length) break;
+    start = end;
+    end = end + 128;
+    if(end > poly.length) end = poly.length;
+  }
+}
+
 let Timer;
 function refreshDisplay () {
   g.clear(true); // also loads current theme
 
+  // TODO: Documentation indicates an upper limit of 64 points, but this works with hundreds.
+  // However, this limits of valid for fillPoly
   g.drawPoly(polyVonKoch, false);
+  //FillPolygon(poly);
   drawClockFace();
   drawClockHands();
 
