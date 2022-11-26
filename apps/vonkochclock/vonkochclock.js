@@ -21,7 +21,6 @@ var ratio = Math.sqrt(3.0)/2.0;
 
 function drawVK(x1,y1,x2,y2,depth)
 {
-  //console.log("In func:", depth, x1,y1,x2,y2);
   depth--;
 
   let vx = (x2-x1)/3;
@@ -49,7 +48,6 @@ function drawVK(x1,y1,x2,y2,depth)
 
 function calcVK(poly,x1,y1,x2,y2,depth)
 {
-  //console.log("In func:", depth, x1,y1,x2,y2);
   depth--;
 
   let vx = (x2-x1)/3;
@@ -229,8 +227,6 @@ function drawClockHands () {
   transformPolygon(MinuteHandPolygon, CenterX,CenterY, MinutesAngle);
   g.fillPoly(transformedPolygon);
 
-  //let sPhi = Math.sin(SecondsAngle), cPhi = Math.cos(SecondsAngle);
-
   let indexDestSeconds = polyToSeconds[Seconds];
   console.log("Seconds:", Seconds, " indexDestSeconds:", indexDestSeconds);
   let xDestSeconds = polyVonKoch[indexDestSeconds];
@@ -244,15 +240,11 @@ function drawClockHands () {
   );
 }
 
-/**** refreshDisplay ****/
-
 let Timer;
 function refreshDisplay () {
   g.clear(true); // also loads current theme
 
-  // drawVonKoch(5);
   g.drawPoly(polyVonKoch, false);
-  //console.log("Len poly:", poly.length);
   drawClockFace();
   drawClockHands();
 
