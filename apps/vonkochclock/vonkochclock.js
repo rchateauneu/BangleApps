@@ -19,6 +19,45 @@ var cx = CenterX + r * Math.sin(-2*Math.PI/3.0);
 var cy = CenterY + r * Math.cos(-2*Math.PI/3.0);
 var ratio = Math.sqrt(3.0)/2.0;
 
+function fillVK(x1,y1,x2,y2,depth)
+{
+  depth--;
+
+  let vx = (x2-x1)/3;
+  let vy = (y2-y1)/3;
+  let hx = -vy*ratio;
+  let hy = vx*ratio;
+  let xi = x1 + (vx * 1.5) + hx;
+  let yi = y1 + (vy * 1.5) + hy;
+  let x11 = x1+vx;
+  let y11 = y1+vy;
+  let x22 = x2-vx;
+  let y22 = y2-vy;
+
+  g.fillPoly([x11,y11,xi,yi,x22,y22]);
+  if(depth == 1) {
+    // This avoids recursive calls at the lowest level.
+    return;
+  }
+  else {
+    //g.fillPoly([x11,y11,xi,yi,x22,y22]);
+    fillVK(x1,y1,x11,y11,depth);
+    fillVK(x11,y11,xi,yi,depth);
+    fillVK(xi,yi,x22,y22,depth);
+    fillVK(x22,y22,x2,y2,depth);
+  }
+}
+
+// This fills a Von Koch curve.
+function fillVonKoch(dp)
+{
+  g.fillPoly([ax,ay,bx,by,cx,cy]);
+  fillVK(ax,ay,bx,by,dp);
+  fillVK(bx,by,cx,cy,dp);
+  fillVK(cx,cy,ax,ay,dp);
+}
+
+
 function drawVK(x1,y1,x2,y2,depth)
 {
   depth--;
@@ -44,6 +83,15 @@ function drawVK(x1,y1,x2,y2,depth)
     drawVK(xi,yi,x22,y22,depth);
     drawVK(x22,y22,x2,y2,depth);
   }
+}
+
+// This draws a Von Koch curve. It is not used anymore because calculating
+// then drawing a polygon is faster.
+function drawVonKoch(dp)
+{
+  drawVK(ax,ay,bx,by,dp);
+  drawVK(bx,by,cx,cy,dp);
+  drawVK(cx,cy,ax,ay,dp);
 }
 
 function calcVK(poly,x1,y1,x2,y2,depth)
@@ -73,16 +121,10 @@ function calcVK(poly,x1,y1,x2,y2,depth)
   }
 }
 
-function drawVonKoch(dp)
-{
-  drawVK(ax,ay,bx,by,dp);
-  drawVK(bx,by,cx,cy,dp);
-  drawVK(cx,cy,ax,ay,dp);
-}
-
+// This calculates a Von Koch curve into a polygon.
 function calcVonKoch(dp)
 {
-  poly = []
+  poly = [];
   calcVK(poly,ax,ay,bx,by,dp);
   calcVK(poly,bx,by,cx,cy,dp);
   calcVK(poly,cx,cy,ax,ay,dp);
@@ -204,7 +246,11 @@ let polyVonKoch = calcVonKoch(5);
 let polyToSeconds = calcPolyToSeconds(polyVonKoch);
 console.log("polyVonKoch.length:", polyVonKoch.length);
 
+
 function drawClockHands () {
+  //g.setColor(255,0,0);
+  //fillVonKoch(5);
+
   let now = new Date();
 
   let Hours   = now.getHours() % 12;
@@ -236,31 +282,19 @@ function drawClockHands () {
   );
 }
 
-function FillPolygon(poly)
-{
-  /*
-  This algorithm does not work because it does not fill the proper side of each sub-polygonn.
-  Maybe filling the triangles recursively, but before drawing the hands.
-  */
-  let start = 0;
-  let end = 128;
-  while(true) {
-    g.fillPoly(polyVonKoch.slice(start,end));
-    if(end >= poly.length) break;
-    start = end;
-    end = end + 128;
-    if(end > poly.length) end = poly.length;
-  }
-}
-
 let Timer;
 function refreshDisplay () {
   g.clear(true); // also loads current theme
 
+  g.fillRect(0,0,ScreenWidth,ScreenHeight);
+  g.setColor(255,0,0);
+  fillVonKoch(5);
+  g.setColor(0,0,255);
+  
+  
   // TODO: Documentation indicates an upper limit of 64 points, but this works with hundreds.
-  // However, this limits of valid for fillPoly
+  // However, this limits is valid for fillPoly.
   g.drawPoly(polyVonKoch, false);
-  //FillPolygon(poly);
   drawClockFace();
   drawClockHands();
 
@@ -268,4 +302,4 @@ function refreshDisplay () {
   Timer = setTimeout(refreshDisplay,Pause);
 }
 
-setTimeout(refreshDisplay, 500);                 // enqueue first draw request
+setTimeout(refreshDisplay, 500);

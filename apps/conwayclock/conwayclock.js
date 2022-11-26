@@ -23,8 +23,8 @@ var bufferSize = bufferW * bufferH;
 // Web Safe 216 color palette
 // https://en.wikipedia.org/wiki/Web_colors#Web-safe_colors
 // r,g,b = (0..5, 0..5, 0..5)
-var COLOR_RED = 5 *36;
-var COLOR_GREEN = 5*16;
+var COLOR_RED = 5 * 36;
+var COLOR_GREEN = 5 * 16;
 var COLOR_BLUE = 5;
 var COLOR_WHITE = 255; // If 8 bits
 var COLOR_BLACK = 0;
