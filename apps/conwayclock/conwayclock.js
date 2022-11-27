@@ -48,7 +48,10 @@ function ConwayBuffer(imgW, imgH, bufferInput, bufferOutput)
   //  bufferOutput[bufferOffset] = 0;
   //}
 
+  // Sorted in increasing order.
   var offsets = [-imgH - 1, -imgH, -imgH + 1, -1, 1, imgH -1, imgH, imgH + 1];
+  
+  // bufferOutput is used first to store the number of neighbours, then for the color.
 	for(let bufferOffset = 0; bufferOffset < maxOffset; bufferOffset++)
 	{
     if(COLOR_WHITE != bufferInput[bufferOffset]) {
@@ -72,10 +75,6 @@ function ConwayBuffer(imgW, imgH, bufferInput, bufferOutput)
       }
     }
     else {
-      // 
-      // 128 Grey
-      // 100 Green
-      // 200 red
       if((count < 2) || (count > 3)) {
         currentColor = COLOR_WHITE;
       }
@@ -84,7 +83,150 @@ function ConwayBuffer(imgW, imgH, bufferInput, bufferOutput)
   }
 }
 
-//////////////////////////////////////////////////////////////////////
+var currentBuffer = Graphics.createArrayBuffer(imageW,imageH,imgbpp);
+
+/////////////////////////////////////////////////////////////
+// Display digits with pre-computed images.
+// Problem with the two dots, because createImage reduces the expected size.
+
+function createChar(str) {
+  console.log("str=", str);
+  img = Graphics.createImage(str);
+  //arrayBuffer = Graphics.createArrayBuffer(3,7,imgbpp);
+  //arrayBuffer.setColor(COLOR_RED);
+  //arrayBuffer.drawImage(img, 0, 0);
+  console.log("img=", img);
+  //return arrayBuffer;
+  return img;
+}
+
+var img0 = createChar(`
+ 1
+1 1
+1 1
+1 1
+1 1
+1 1
+ 1
+`);
+var img1 = createChar(`
+ 1
+11
+ 1
+ 1
+ 1
+ 1
+111
+`);
+var img2 = createChar(`
+ 1
+1 1
+  1
+ 1
+1
+1
+111
+`);
+var img3 = createChar(`
+ 1
+1 1
+  1
+ 1
+  1
+1 1
+ 1
+`);
+var img4 = createChar(`
+  1
+1 1
+1 1
+111
+  1
+  1
+  1
+`);
+var img5 = createChar(`
+111
+1
+1
+ 1
+  1
+1 1
+ 1
+`);
+var img6 = createChar(`
+ 1
+1 1
+1
+11
+1 1
+1 1
+ 1
+`);
+var img7 = createChar(`
+111
+1 1
+  1
+ 1
+ 1
+ 1
+ 1
+`);
+var img8 = createChar(`
+ 1
+1 1
+1 1
+ 1
+1 1
+1 1
+ 1
+`);
+var img9 = createChar(`
+ 1
+1 1
+1 1
+ 11
+  1
+1 1
+ 1
+`);
+var imgD = createChar(`
+
+   
+ 1 
+   
+ 1 
+   
+   
+`);
+const ImagesArray = [img0, img1, img2, img3, img4, img5, img6, img7, img8, img9, imgD];
+
+const setNumImages = (img, x, y, offsety, color) => {
+  // TODO: White pixels could be transparent.
+  console.log("img=", img);
+  // currentBuffer.drawImage(img,2*j,2*i,{scale:2});
+  //myobj = {width:3, height:7, bpp:8, transparent:0,buffer:img.buffer};
+  //myobj = {width:3, height:7, bpp:1, transparent:0,buffer:img.buffer};
+  myobj = {width:img.width, height:img.height, bpp:1, transparent:0,buffer:img.buffer};
+  // currentBuffer.drawImage(myobj,2*j + (7-img.height),2*i + (3-img.width),{scale:2});
+  // currentBuffer.drawImage(myobj,2*(j + (3-img.width)),2*(i + (7-img.height)),{scale:2});
+  currentBuffer.drawImage(myobj,2*x,2*y + 2 * offsety,{scale:2});
+};
+
+function WriteTimeImages(hourTens, hourOnes, minuteTens, minuteOnes, color)
+{
+  currentBuffer.setColor(COLOR_RED);
+  setNumImages(ImagesArray[hourTens], 1, 8, 0, color);
+  setNumImages(ImagesArray[hourOnes], 6, 8, 0, color);
+  setNumImages(ImagesArray[10], 10, 8, 2, color);
+  //setNumImages(ImagesArray[10], 8, 10, color);
+  setNumImages(ImagesArray[minuteTens], 14, 8, 0, color);
+  setNumImages(ImagesArray[minuteOnes], 19, 8, 0, color);
+}
+
+/////////////////////////////////////////////////////////////
+// Another way to display digits.
+
 const ONE = [
   [0, 1, 0],
   [1, 1, 0],
@@ -177,8 +319,6 @@ const ZERO = [
 ];
 const NUMBERS = [ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE];
 
-var currentBuffer = Graphics.createArrayBuffer(imageW,imageH,imgbpp);
-
 const setPixelSub = (i, j, color) => {
   currentBuffer.buffer[i * imageW + j] = color;
 };
@@ -207,7 +347,7 @@ const setDots = (color) => {
   setPixel(12, 10, color);
 };
 
-function WriteTime(hourTens, hourOnes, minuteTens, minuteOnes, color)
+function WriteTimeArrays(hourTens, hourOnes, minuteTens, minuteOnes, color)
 {
     setNum(NUMBERS[hourTens], 8, 1, color);
     setNum(NUMBERS[hourOnes], 8, 6, color);
@@ -215,6 +355,8 @@ function WriteTime(hourTens, hourOnes, minuteTens, minuteOnes, color)
     setNum(NUMBERS[minuteTens], 8, 13, color);
     setNum(NUMBERS[minuteOnes], 8, 18, color);
 }
+
+/////////////////////////////////////////////////////////////
 
 function DrawTime(black)
 {
@@ -224,7 +366,8 @@ function DrawTime(black)
   const minuteTens = Math.floor(d.getMinutes() / 10);
   const minuteOnes = d.getMinutes() % 10;
   const seconds = d.getSeconds();
-  WriteTime(hourTens, hourOnes, minuteTens, minuteOnes, COLOR_RED);
+  // WriteTimeImages(hourTens, hourOnes, minuteTens, minuteOnes, COLOR_RED);
+  WriteTimeArrays(hourTens, hourOnes, minuteTens, minuteOnes, COLOR_RED);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -250,25 +393,12 @@ function CreateImage()
   DrawCurrentBuffer();
 }
 
-var loopCount = 100;
-
 function MainLoop()
 {
-  console.log("loopCount=", loopCount);
-  if(loopCount > 0) {
-    loopCount--;
-  	setTimeout(MainLoop, 1000);
-    CreateImage();
-  }
+  setTimeout(MainLoop, 1000);
+  CreateImage();
 }
 
-function printit() {
-  console.log("PRINTIT");
-}
-
-//Bangle.setUI({btn:printit});
-
-// ??
 Bangle.setUI("clock");
 // Bangle.loadWidgets();
 
